@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %} France {% endblock %}
+
+{% block libraries %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
+<!-- leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+{% endblock %}
+
+{% block noheader %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row fill">
+        <div class="col-sm-12 col-md-6" id="maps">
+            <div class="row" id="layercontrol">
+                <select class="form-select" id="typeValue" onchange="updateLayer()">
+                    <option value="Total_vac" selected>Total vaccins</option>
+                    <option value="Total_hospiIncid">Total hospi Incid</option>
+                </select>
+            </div>
+            <div class="row heightMetro">
+                <div id="map_Metropole"></div>
+            </div>
+            <div class="row heightMini">
+                <div class="col px-1 py-1">
+                    <div style="height:100%" id="map_Martinique"></div>
+                </div>
+                <div class="col px-1 py-1">
+                    <div style="height:100%" id="map_Reunion"></div>
+                </div>
+                <div class="col px-1 py-1">
+                    <div style="height:100%" id="map_Mayotte"></div>
+                </div>
+                <div class="col px-1 py-1">
+                    <div style="height:100%" id="map_Guyanne"></div>
+                </div>
+                <div class="col px-1 py-1">
+                    <div style="height:100%" id="map_Guadeloupe"></div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-sm-12 col-md-6 overflow-auto" id="graphs">
+            <h2>Récapitulatif </h2>
+            <p><i>Dernière mise à jour</i> : {{ dateUpdate }}</p>
+
+            <table id="TableFrance" class="display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>Regions</th>
+                    <th>Personnes vaccinées</th>
+                    <th>Hospitalisation (incidence)</th>
+                </tr>
+                </thead>
+            </table>
+
+            <div class="row">
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">Nombre de vaccinations</div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ all_vaccins }}</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">Admission en réanimation</div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ all_rea }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Vaccination </h2>
+            <canvas id="chart"></canvas>
+            <canvas id="chart2"></canvas>
+
+            <h2>Admissions en réanimation </h2>
+            Données relatives aux nouvelles admissions en réanimation par région.
+            <canvas id="chart_hospitInci"></canvas>
+            <canvas id="chart_hospitInci_evol"></canvas>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+    var ctx = document.getElementById("chart");
+   var myLineChart = new Chart(ctx, {
+       type: 'bar',
+       data: {
+              labels: {{ labels_vaccin | safe }},
+              datasets: [{
+                fill:false,
+                borderColor:"rgb(75, 192, 192)",
+                data: {{ dataValue_vaccin |safe }}
+              }]
+            },
+        options: {
+            title: {
+                display: true,
+                fontSize: 20,
+                text: 'Cumul des personnes vaccinées par régions'
+            },
+            legend: {
+                display: false,
+            }
+        }
+   });
+
+   var ctx = document.getElementById("chart2");
+   var myLineChart = new Chart(ctx, {
+       type: 'line',
+       data: {
+              labels: {{ evolDate_vaccin_labels | safe }},
+              datasets: [{
+                fill:false,
+                borderColor:"rgb(75, 192, 192)",
+                data: {{ evolDate_vaccin_data |safe }}
+              }]
+            },
+        options: {
+            title: {
+                display: true,
+                fontSize: 20,
+                text: 'Evolution du nombre de personnes vaccinées en France'
+            },
+            legend: {
+                display: false,
+            }
+        }
+   });
+
+   // HOSPI INCIT
+   var ctx = document.getElementById("chart_hospitInci");
+   var myLineChart = new Chart(ctx, {
+       type: 'bar',
+       data: {
+              labels: {{ labels_hospitInci_date | safe }},
+              datasets: [{
+                label: 'Population',
+                fill:false,
+                borderColor:"rgb(75, 192, 192)",
+                data: {{ dataValue_hospitInci_date |safe }}
+              }]
+            }
+   });
+
+   var ctx = document.getElementById("chart_hospitInci_evol");
+   var myLineChart = new Chart(ctx, {
+       type: 'line',
+       data: {
+              labels: {{ evolDate_hospiInci_labels | safe }},
+              datasets: [{
+                fill:false,
+                borderColor:"rgb(75, 192, 192)",
+                data: {{ evolDate_hospiInci_data |safe }}
+              }]
+            },
+        options: {
+            title: {
+                display: true,
+                fontSize: 20,
+                text: 'Evolution des admissions en réanimation en France'
+            },
+            legend: {
+                display: false,
+            }
+        }
+   });
+
+
+   $(document).ready(function() {
+
+    $('#TableFrance').DataTable( {
+        "order": [[ 1, "desc" ]],
+        "ajax":{
+            "processing": true,
+            "dataSrc": "",
+            "url": "{% url 'request_ajax_url_france' %}"
+        },
+        "columns": [
+            { "data": "region"},
+            { "data": "Total_vac"},
+            { "data": "Total_hospiIncid"}
+        ]
+
+    } );
+} );
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // MAP
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////// FUNCTIONS /////////////////////////////////////////////////////////////////////////////
+    function highlightFeature(e) {
+        var layer = e.target;
+
+        layer.setStyle({
+            weight: 3,
+            color: '#667',
+            dashArray: '',
+            fillOpacity: 0.7
+        });
+
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
+
+        info.update(layer.feature.properties['nom'], layer.feature['properties'][property]);
+    }
+
+    function resetHighlight(e) {
+        geojson_layer.resetStyle(e.target);
+        info.update();
+    }
+
+    function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds());
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+        });
+    }
+
+    function getColor(d) {
+        return d > 100000 ? '#800026' :
+               d > 500000  ? '#BD0026' :
+               d > 250000  ? '#E31A1C' :
+               d > 100000  ? '#FC4E2A' :
+               d > 50000   ? '#FD8D3C' :
+               d > 10000   ? '#FEB24C' :
+               d > 1000   ? '#FED976' :
+                           '#FFEDA0';
+    }
+
+    function style(feature) {
+
+        return {
+            fillColor: getColor(feature['properties'][property]),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '1',
+            fillOpacity: 0.7
+        };
+    }
+
+    //////////////////////////// MAP ///////////////////////////////////////////////////////////////////////////////////
+
+    var map = L.map('map_Metropole',{ zoomControl: false, scrollWheelZoom: false });
+
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    map.attributionControl.addAttribution('Vaccination data &copy; <a href="https://www.data.gouv.fr/fr/" target="_blank">Data gouv</a>');
+
+    var map_Martinique = L.map('map_Martinique', { zoomControl: false, scrollWheelZoom: false });
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 19
+    }).addTo(map_Martinique);
+
+    var map_Reunion = L.map('map_Reunion', { zoomControl: false, scrollWheelZoom: false });
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 19
+    }).addTo(map_Reunion);
+
+    var map_Mayotte = L.map('map_Mayotte', { zoomControl: false, scrollWheelZoom: false });
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 19
+    }).addTo(map_Mayotte);
+
+    var map_Guyanne = L.map('map_Guyanne', { zoomControl: false, scrollWheelZoom: false });
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 19
+    }).addTo(map_Guyanne);
+
+    var map_Guadeloupe = L.map('map_Guadeloupe', { zoomControl: false, scrollWheelZoom: false });
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 19
+    }).addTo(map_Guadeloupe);
+
+
+
+    //////////////////////////// LIMIT ////////////////////////////////////////////////////////////////////////////////
+    map.fitBounds([
+    [53.97688766594427, 19.99374389648438], // Northeast
+    [38.9869008405745, -16.92031860351563]  // Southwest
+    ]);
+
+    map_Martinique.fitBounds([
+        [14.966013251567164, -60.12954711914063], // Northeast
+        [14.301646637469448, -61.90933227539063]  // Southwest
+    ]);
+
+    map_Reunion.fitBounds([
+        [-20.810039003142496, 56.41616821289063], // Northeast
+        [-21.450512318828117, 54.63638305664063]  // Southwest
+    ]);
+
+     map_Mayotte.fitBounds([
+        [-12.486191263406937, 46.0491943359375], // Northeast
+        [-13.155713308217406, 44.2694091796875]  // Southwest
+    ]);
+
+     map_Guyanne.fitBounds([
+        [6.664607562172573, -45.988769531250015], // Northeast
+        [1.1864386394452024, -60.22705078125001]  // Southwest
+    ]);
+
+     map_Guadeloupe.fitBounds([
+        [16.830832189624825, -59.62554931640625], // Northeast
+        [15.511912249339883, -63.18511962890626]  // Southwest
+    ]);
+
+
+    //////////////////////////// GEOJSON ///////////////////////////////////////////////////////////////////////////////
+
+    var property = 'Total_vac'
+    var geojson_layer  = L.geoJson({{ map | safe}}, {
+        style: style,
+        onEachFeature: onEachFeature
+    });
+    geojson_layer.addTo(map);
+    geojson_layer.addTo(map_Martinique);
+    geojson_layer.addTo(map_Reunion);
+    geojson_layer.addTo(map_Guadeloupe);
+    geojson_layer.addTo(map_Guyanne);
+    geojson_layer.addTo(map_Mayotte);
+
+    //////////////////////////// overlayMaps ///////////////////////////////////////////////////////////////////////////
+
+    function updateLayer() {
+        map.removeLayer(geojson_layer);
+
+        property = document.getElementById("typeValue").value
+        geojson_layer  = L.geoJson({{ map | safe}}, {
+            style: style,
+            onEachFeature: onEachFeature
+        });
+        map.addLayer(geojson_layer)
+        map_Martinique.addLayer(geojson_layer)
+        map_Reunion.addLayer(geojson_layer)
+        map_Guadeloupe.addLayer(geojson_layer)
+        map_Guyanne.addLayer(geojson_layer)
+        map_Mayotte.addLayer(geojson_layer)
+    }
+
+    //////////////////////////// LEGEND ////////////////////////////////////////////////////////////////////////////////
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 1000, 10000, 50000, 100000, 250000, 500000, 1000000],
+            labels = [];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br><br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+
+    //////////////////////////// INFO //////////////////////////////////////////////////////////////////////////////////
+    var info = L.control();
+
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info');
+        this.update();
+        return this._div;
+    };
+
+    info.update = function (nom, value) {
+      this._div.innerHTML = '<h4>Information</h4>';
+
+      if(nom) {
+          this._div.innerHTML += '<b>Region' + nom + '</b> :' + value;
+      } else {
+        this._div.innerHTML += 'Hover over a region';
+      }
+    };
+
+    info.addTo(map);
+
+
+
+</script>
+
+{% endblock %}
+

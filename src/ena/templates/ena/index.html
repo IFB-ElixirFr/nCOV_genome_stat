@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %} ENA stats {% endblock %}
+
+{% block titleHeader %} Dashboard ENA - nCOV {% endblock %}
+{% block titleSubHeader %} {{ page_label_loc }} - {{ page_label_time }} {% endblock %}
+
+{% block libraries %}
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
+    <!-- Plotly js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div id="mapid"></div>
+        </div>
+
+        <div class="col-md-10 col-lg-4">
+            <div class="row justify-content-center">
+                <div class="col-md-12 col-lg-12">
+                        <a href="{% if page_label_loc == 'World' %} {% url 'dashboardENA' days_range=7  %} {% else %} {% url 'dashboardENA' days_range=7 country_names=page_label_loc %} {% endif %}"
+                           class="btn {% if page_label_time == 'Week' %} btn-info  {% else %} btn-secondary {% endif %}">Week</a>
+                        <a href="{% if page_label_loc == 'World' %} {% url 'dashboardENA' days_range=30 %} {% else %} {% url 'dashboardENA' days_range=30 country_names=page_label_loc %} {% endif %}"
+                           class="btn {% if page_label_time == 'Month' %} btn-info  {% else %} btn-secondary {% endif %}">Month</a>
+                        <a href="{% if page_label_loc == 'World' %} {% url 'dashboardENA' days_range=365  %} {% else %} {% url 'dashboardENA' days_range=365 country_names=page_label_loc %} {% endif %}"
+                           class="btn {% if page_label_time == 'Year' %} btn-info  {% else %} btn-secondary {% endif %}">Year</a>
+                    <canvas id="chart"></canvas>
+                </div>
+
+                <div class="col-md-12 col-lg-12">
+                    <div id="chart_Cum"></div>
+                </div>
+
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3" >
+                      <div class="card-header">All submissions</div>
+                      <div class="card-body">
+                        <h5 class="card-title">{{ all_summits }}</h5>
+                      </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3" >
+                      <div class="card-header">Mean submissions per day</div>
+                      <div class="card-body">
+                        <h5 class="card-title">{{ mean_summits }}</h5>
+                      </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3" >
+                      <div class="card-header"># countries</div>
+                      <div class="card-body">
+                        <h5 class="card-title">{{ difCountries }}</h5>
+                      </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-6">
+                    <div class="card text-white bg-secondary mb-3" >
+                      <div class="card-header"># countries</div>
+                      <div class="card-body">
+                        <h5 class="card-title">{{ difCountries }}</h5>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var ctx = document.getElementById("chart");
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+           labels: {{ daysLabels | safe }} ,
+           datasets: [{
+                label:"Submissions",
+                data: {{ data | safe }},
+                borderColor: 'rgb(255,128,128)',
+                backgroundColor: 'rgb(255,128,128)'
+           }]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'top',
+            },
+            scales:{yAxes:[{ticks:{beginAtZero:true}}]},
+            title: {
+                display: true,
+                text: 'Submission by day'
+            }
+        }
+    });
+
+    var trace1 = {
+        x: {{ daysLabels | safe }},
+        y: {{ dataCum | safe }},
+        type: 'scatter'
+    };
+
+    var data = [trace1];
+
+    Plotly.newPlot('chart_Cum', data, {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+
+    // MAP
+
+
+    function getColor(d) {
+        return d > 10000 ? '#800026' :
+               d > 5000  ? '#BD0026' :
+               d > 2000  ? '#E31A1C' :
+               d > 1000  ? '#FC4E2A' :
+               d > 500   ? '#FD8D3C' :
+               d > 200   ? '#FEB24C' :
+               d > 100   ? '#FED976' :
+                           '#FFEDA0';
+    }
+
+    function style(feature) {
+        return {
+            fillColor: getColor(feature.properties.submissions),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '1',
+            fillOpacity: 0.7
+        };
+    }
+
+    var map = L.map('mapid').setView([0, 0], 2);
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    // control that shows state info on hover
+    var info = L.control();
+
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info');
+        this.update();
+        return this._div;
+    };
+
+    info.update = function (props) {
+        this._div.innerHTML = '<h4># Submissions</h4>' +  (props ?
+            '<b>' + props.ADMIN + '</b> : ' + props.submissions
+            : 'Hover over a state');
+    };
+
+    info.addTo(map);
+
+    var geojson;
+    function highlightFeature(e) {
+        var layer = e.target;
+
+        layer.setStyle({
+            weight: 3,
+            color: '#667',
+            dashArray: '',
+            fillOpacity: 0.7
+        });
+
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
+
+        info.update(layer.feature.properties);
+    }
+
+    function resetHighlight(e) {
+        geojson.resetStyle(e.target);
+        info.update();
+    }
+
+    function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds());
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: zoomToFeature
+        });
+    }
+
+    geojson = L.geoJson({{ map | safe}}, {
+        style: style,
+        onEachFeature: onEachFeature
+    }).addTo(map);
+
+    map.attributionControl.addAttribution('Submission data &copy; <a href="https://www.ebi.ac.uk/ena/browser/home" target="_blank">ENA database</a>');
+
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [0, 100, 200, 500, 1000, 2000, 5000, 10000],
+            labels = [];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+
+</script>
+{% endblock %}>

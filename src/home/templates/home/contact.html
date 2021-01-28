@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %} Sign up {% endblock %}
+{% block titleHeader %} Create your account {% endblock %}
+{% block titleSubHeader %} Join us {% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="shadow">
+        <form action="{% url 'contact' %}" method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="mb-3">
+                    <p><b>{{ field.label }}{% if field.field.required  %} <span style="color:red;">*</span> {% endif %}</b> </p>
+                    {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {{ field }}
+                </div>
+                <br>
+            {% endfor %}
+            <div class="d-grid gap-2">
+                <button id="submit" type="submit" class="btn btn-primary ">Send email</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

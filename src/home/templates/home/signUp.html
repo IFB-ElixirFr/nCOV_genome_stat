@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %} Sign up {% endblock %}
+{% block titleHeader %} Create your account {% endblock %}
+{% block titleSubHeader %} Join us {% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show">
+        <h4 class="alert-heading">WARNING <small>An error occurred during registration</small></h4>
+        <button type="button" class="btn-close" aria-label="Close"></button>
+        <hr>
+        {% for field in u_form %}
+            {% for error in field.errors %}
+                <p class="mb-0">
+                  {% if field != '__all__' %}
+                    <strong>{{ field.label }}:</strong>
+                  {% endif %}
+                  {{ error }}
+                </p>
+            {% endfor %}
+        {% endfor %}
+        {% for field in p_form %}
+            {% for error in field.errors %}
+                <p class="mb-0">
+                  {% if field != '__all__' %}
+                    <strong>{{ field.label }}:</strong>
+                  {% endif %}
+                  {{ error }}
+                </p>
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+    {% endif %}
+    <div class="shadow">
+        <form action="{% url 'signUp' %}" method="post">
+            {% csrf_token %}
+
+            {% for field in u_form %}
+                <div class="mb-3">
+                    <p><b>{{ field.label }}{% if field.errors %} <span style="color:red;">*</span> {% endif %}</b> </p>
+                    {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {{ field }}
+                </div>
+                <br>
+            {% endfor %}
+
+            {% for field in p_form %}
+                <div class="fieldWrapper">
+                    <p><b>{{ field.label }}{% if field.errors %} <span style="color:red;">*</span> {% endif %}</b> </p>
+                    {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {{ field }}
+                </div>
+                <br>
+            {% endfor %}
+
+            <div class="d-grid gap-2">
+                <button id="submit" type="submit" class="btn btn-primary ">Create account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

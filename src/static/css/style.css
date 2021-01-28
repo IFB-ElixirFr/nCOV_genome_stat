@@ -1,0 +1,157 @@
+/* ===================================================
+    STYLE - nCOV-genome-stat
+===================================================== */
+
+{% load static %}
+
+
+
+/* ---------------------------------------------------
+    stats
+----------------------------------------------------- */
+
+#maps {
+    height: 100%;
+    min-height: 100%;
+}
+
+#graphs {
+  height:100%;
+  overflow-y: auto;
+}
+
+html, body {
+    height: 100%;
+}
+
+#content  {
+    min-height: calc(100% - 220px);
+    height: calc(100% - 220px);
+}
+.heightMetro {
+    height:70%;
+}
+
+.heightMini {
+    height:calc(30% - 40px);
+}
+
+@media (max-width: 576px) {
+	#content { height: unset; }
+	#maps {height: calc(100% - 0px); min-height: 500px;}
+	.height50 {min-height: 250px;}
+	#graphs { overflow: unset !important;}
+}
+
+.container-fluid, .fill {
+    height:100%
+}
+
+/* ---------------------------------------------------
+    Form
+----------------------------------------------------- */
+.helptext{
+    font-style: italic;
+}
+
+ul.errorlist li {
+    list-style-type: none;
+    color: red;
+    font-weight: bold;
+}
+
+ul.errorlist {
+    padding-left: 0rem;
+}
+
+table.form tr > td{
+   padding-bottom: 1em;
+}
+
+
+.shadow {
+    padding: 20px;
+    -webkit-box-shadow: 0px 0px 16px 1px rgba(0,0,0,0.39);
+    -moz-box-shadow: 0px 0px 16px 1px rgba(0,0,0,0.39);
+    box-shadow: 0px 0px 16px 1px rgba(0,0,0,0.39);
+}
+/* ---------------------------------------------------
+    Footer
+----------------------------------------------------- */
+
+.footer {
+    width: 100%;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.footer::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: #f8f9fa !important;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+/* ---------------------------------------------------
+    Images
+----------------------------------------------------- */
+  .sectionCover{
+      width: 100%;
+      height: 400px;
+      margin-bottom: 30px;
+      background-image: url('/static/img/cover.svg');
+      background-size: cover;
+      color: white;
+      text-shadow: #173b6c 1px 0 10px;
+      text-align: center;
+  }
+
+/* ---------------------------------------------------
+    Images
+----------------------------------------------------- */
+
+img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+}
+
+.linkSocial {
+    font-size: x-large;
+    color: #173b6c;
+}
+
+/* ---------------------------------------------------
+    Map
+----------------------------------------------------- */
+#mapid {  height: 100%; min-height: 500px;}
+
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}

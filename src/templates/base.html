@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} nCOV GS {% endblock %} </title>
+
+    <!-- Nav icon -->
+    <link rel="icon" type="image/png" href="{% static 'img/icon.png' %}"/>
+
+    <!-- Style -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css" media="screen">
+
+    <!-- Font Awesome -->
+    <script src="{% static 'fontawesome_free/js/all.min.js' %}"></script>
+
+    <!-- Boostrap -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" type="text/css" media="screen">
+
+    <!-- Jquery -->
+    <script src="{% static 'js/jquery-3.5.1.js' %}"></script>
+
+    <!-- Datatable -->
+    <link rel="stylesheet" href="{% static 'DataTables/datatables.css' %}">
+    <script type="text/javascript" charset="utf8"  src="{% static 'DataTables/datatables.js' %}"></script>
+
+    {% block libraries %} {% endblock %}
+
+</head>
+<body>
+    <div id="nav">
+        {% include "nav.html" %}
+    </div>
+
+    {% block noheader %}
+        <div class="sectionCover d-flex flex-column justify-content-center align-items-center">
+        <p id="id_header_title" style="margin-bottom: .5rem; font-weight: 500; line-height: 1.2; font-size: 2.5rem;">{% block titleHeader %} nCOV genome stat {% endblock %} </p>
+        <p id="id_header_subTitle" style="font-size: 1.6em;text-align:center;">{% block titleSubHeader %} Mieux comprendre la COVID-19 par des statistiques {% endblock %} </p>
+        </div>
+    {% endblock %}
+
+    <div id="content">
+        {% block content %} {% endblock %}
+    </div>
+
+    <div id="footer">
+        {% include "footer.html" %}
+    </div>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+</html>

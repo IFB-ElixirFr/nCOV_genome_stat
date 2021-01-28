@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %} Vaccins {% endblock %}
+{% block titleHeader %} Vaccins {% endblock %}
+{% block titleSubHeader %} {{ region }} {% endblock %}
+
+{% block libraries %}
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
+    <!-- leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'stats_all_regions' %}"> <i class="fas fa-arrow-alt-circle-left"></i> Retour à toutes les régions</a>
+   <h1>Vaccins - {{ region }} </h1>
+
+    <div id="mapid"></div>
+
+    <br>
+
+     <table id="vacTableRegion" class="display" style="width:100%">
+         <thead>
+            <tr>
+                <th>Date</th>
+                <th>Personnes vaccinées</th>
+            </tr>
+        </thead>
+     </table>
+   <canvas id="chart"></canvas>
+</div>
+
+<script>
+var ctx = document.getElementById("chart");
+   var myLineChart = new Chart(ctx, {
+       type: 'line',
+       data: {
+              labels: {{ labels | safe }},
+              datasets: [{
+                label: 'Population',
+                fill:false,
+                borderColor:"rgb(75, 192, 192)",
+                data: {{ dataValue |safe }}
+              }]
+            }
+   });
+
+   $(document).ready(function() {
+
+    $('#vacTableRegion').DataTable( {
+        "order": [[ 1, "desc" ]],
+        "ajax":{
+            "processing": true,
+            "dataSrc": "",
+            "url": "{% url 'request_ajax_url_region' codeRegion %}"
+        },
+        "columns": [
+            { "data": "date"},
+            { "data": "totalVaccines"}
+        ]
+
+    } );
+    } );
+
+
+    var map = L.map('mapid', { zoomControl: false, scrollWheelZoom: false }).setView([0, 0], 2);
+     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    var geojson = L.geoJson({{ map | safe}}).addTo(map);
+
+    {% if codeRegion == "REG-01" or codeRegion == "REG-02" or codeRegion == "REG-03" or codeRegion == "REG-04" or codeRegion == "REG-06" %}
+        map.fitBounds(geojson.getBounds());
+    {% else %}
+        map.fitBounds([
+        [53.97688766594427, 19.99374389648438], // Northeast
+        [38.9869008405745,  -16.92031860351563]  // Southwest
+        ]);
+    {% endif %}
+
+    /* map.on('moveend', function() {
+     console.log(map.getBounds());
+    }); */
+ console.log(map.getBounds());
+</script>
+
+
+{% endblock %}
